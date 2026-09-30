@@ -6,6 +6,16 @@
     <a class="botao" href="{{ url_for('chamados.novo') }}">Abrir chamado</a>
   </div>
 
+  <ul class="abas" aria-label="Chamados por situação">
+    <li><a href="{{ url_for('chamados.lista', meus=f.meus or None) }}" {% if not f.status %}aria-current="true"{% endif %}>
+      <span class="qtd">{{ contagem.ativos }}</span> Todos</a></li>
+    {% for codigo, rotulo in STATUS.items() %}
+      <li><a href="{{ url_for('chamados.lista', status=codigo, meus=f.meus or None) }}" {% if f.status == codigo %}aria-current="true"{% endif %}>
+        <span class="ponto ponto-{{ codigo }}" aria-hidden="true"></span>
+        <span class="qtd">{{ contagem.get(codigo, 0) }}</span> {{ rotulo }}</a></li>
+    {% endfor %}
+  </ul>
+
   <form method="get" class="filtros" aria-label="Filtrar chamados">
     <div class="campo campo-busca">
       <label for="q">Buscar</label>
@@ -14,7 +24,7 @@
     <div class="campo">
       <label for="status">Situação</label>
       <select id="status" name="status">
-        <option value="">Em aberto e resolvidos</option>
+        <option value="">Todos, exceto arquivados</option>
         {% for codigo, rotulo in STATUS.items() %}
           <option value="{{ codigo }}" {% if f.status == codigo %}selected{% endif %}>{{ rotulo }}</option>
         {% endfor %}
@@ -57,7 +67,11 @@
   </form>
 
   {% if pagina.items %}
-    <p class="contagem">{{ pagina.total }} chamado{{ 's' if pagina.total != 1 }}</p>
+    <div class="legenda">
+      <span>{{ pagina.total }} chamado{{ 's' if pagina.total != 1 }}.</span>
+      <span>Prioridade:</span>
+      {% for codigo, rotulo in PRIORIDADES.items()|reverse %}<span class="prio prio-{{ codigo }}">{{ rotulo }}</span>{% endfor %}
+    </div>
     <div class="rolagem">
       <table class="tabela">
         <thead>
@@ -77,7 +91,7 @@
               <td class="num">{{ c.id }}</td>
               <td><a href="{{ url_for('chamados.detalhe', chamado_id=c.id) }}">{{ c.titulo }}</a></td>
               <td>{{ c.categoria.nome }}</td>
-              <td class="prioridade">{{ PRIORIDADES[c.prioridade] }}</td>
+              <td><span class="prio prio-{{ c.prioridade }}">{{ PRIORIDADES[c.prioridade] }}</span></td>
               <td><span class="situacao s-{{ c.status }}">{{ STATUS[c.status] }}</span></td>
               {% if current_user.e_equipe %}
                 <td>{{ c.solicitante.nome }}</td>

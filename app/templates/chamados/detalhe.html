@@ -37,10 +37,10 @@
       {% endif %}
     </article>
 
-    <aside class="lateral" aria-label="Dados do chamado">
+    <aside class="lateral p-{{ c.prioridade }}" aria-label="Dados do chamado">
       <dl class="dados">
         <dt>Situação</dt><dd><span class="situacao s-{{ c.status }}">{{ STATUS[c.status] }}</span></dd>
-        <dt>Prioridade</dt><dd class="p-{{ c.prioridade }} prioridade">{{ PRIORIDADES[c.prioridade] }}</dd>
+        <dt>Prioridade</dt><dd><span class="prio prio-{{ c.prioridade }}">{{ PRIORIDADES[c.prioridade] }}</span></dd>
         <dt>Categoria</dt><dd>{{ c.categoria.nome }}</dd>
         <dt>Responsável</dt><dd>{{ c.responsavel.nome if c.responsavel else 'Ainda não atribuído' }}</dd>
         <dt>Última atualização</dt><dd>{{ c.atualizado_em|data }}</dd>

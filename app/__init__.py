@@ -18,8 +18,13 @@ FUSO = ZoneInfo("America/Sao_Paulo")
 def _database_url():
     url = os.environ.get("DATABASE_URL", "sqlite:///helpcampus.db")
     # Alguns provedores ainda entregam o prefixo antigo "postgres://"
-    if url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
+    url = url.strip().strip("'\"")
+    if url.startswith("psql "):
+        url = url[5:].strip().strip("'\"")
+    # Força o driver psycopg2 (o SQLAlchemy 2.1 passou a procurar outro por padrão)
+    for prefixo in ("postgres://", "postgresql://"):
+        if url.startswith(prefixo):
+            url = "postgresql+psycopg2://" + url[len(prefixo):]
     return url
 
 

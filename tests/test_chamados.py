@@ -107,3 +107,21 @@ def test_arquivados_ficam_fora_da_lista_padrao(client, entrar, abrir_chamado):
     client.post(f"/chamados/{chamado.id}/atualizar", data={"status": "arquivado"})
     assert "Pedido antigo" not in client.get("/chamados").get_data(as_text=True)
     assert "Pedido antigo" in client.get("/chamados?status=todos").get_data(as_text=True)
+
+
+def test_abas_mostram_contagem_por_situacao(client, entrar, abrir_chamado):
+    entrar("ana@escola.br")
+    abrir_chamado("Primeiro pedido")
+    abrir_chamado("Segundo pedido")
+    texto = client.get("/chamados").get_data(as_text=True)
+    assert '<span class="qtd">2</span> Todos' in texto
+
+
+def test_endereco_do_banco_usa_psycopg2(monkeypatch):
+    from app import _database_url
+    for bruto in ["postgresql://u:s@h/db", "postgres://u:s@h/db",
+                  "  'postgresql://u:s@h/db' ", "psql 'postgresql://u:s@h/db'"]:
+        monkeypatch.setenv("DATABASE_URL", bruto)
+        assert _database_url() == "postgresql+psycopg2://u:s@h/db"
+    monkeypatch.setenv("DATABASE_URL", "postgresql+psycopg2://u:s@h/db")
+    assert _database_url() == "postgresql+psycopg2://u:s@h/db"

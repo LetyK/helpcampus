@@ -1,7 +1,7 @@
 from flask import (Blueprint, abort, current_app, flash, redirect,
                    render_template, request, url_for)
 from flask_login import current_user, login_required
-from sqlalchemy import case, or_
+from sqlalchemy import case, func, or_
 
 from . import db
 from .decoradores import equipe_required
@@ -51,6 +51,11 @@ def lista():
     elif f["meus"]:
         consulta = consulta.filter(Chamado.responsavel_id == current_user.id)
 
+    # Contagem por situação para as abas (respeita o perfil e o "só os meus")
+    contagem = dict(consulta.with_entities(Chamado.status, func.count(Chamado.id))
+                    .group_by(Chamado.status).all())
+    contagem["ativos"] = sum(n for st, n in contagem.items() if st != "arquivado")
+
     if f["status"] in CODIGOS_STATUS:
         consulta = consulta.filter(Chamado.status == f["status"])
     elif f["status"] != "todos":
@@ -77,7 +82,8 @@ def lista():
     pagina = consulta.paginate(per_page=current_app.config["ITENS_POR_PAGINA"],
                                error_out=False)
     categorias = Categoria.query.order_by(Categoria.nome).all()
-    return render_template("chamados/lista.html", pagina=pagina, f=f, categorias=categorias)
+    return render_template("chamados/lista.html", pagina=pagina, f=f,
+                           categorias=categorias, contagem=contagem)
 
 
 @bp.route("/chamados/novo", methods=["GET", "POST"])
