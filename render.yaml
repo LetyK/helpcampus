@@ -1,0 +1,21 @@
+# Blueprint do Render: cria o serviço web a partir deste repositório.
+services:
+  - type: web
+    name: helpcampus
+    runtime: python
+    plan: free
+    region: virginia
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app --workers 2 --bind 0.0.0.0:$PORT
+    healthCheckPath: /entrar
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL      # cole a connection string do Neon (ou de outro PostgreSQL)
+        sync: false
+      - key: ADMIN_EMAIL       # e-mail do primeiro administrador
+        sync: false
+      - key: ADMIN_PASSWORD    # senha do primeiro administrador
+        sync: false
