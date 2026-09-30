@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block titulo %}Usuários{% endblock %}
+{% block conteudo %}
+  <h1>Usuários</h1>
+  <p class="apoio">Defina quem atende chamados. Contas desativadas não conseguem entrar, mas o histórico é mantido.</p>
+  <div class="rolagem">
+    <table class="tabela">
+      <thead><tr><th scope="col">Nome</th><th scope="col">E-mail</th><th scope="col">Desde</th><th scope="col">Perfil e acesso</th></tr></thead>
+      <tbody>
+        {% for u in usuarios %}
+          <tr{% if not u.ativo %} class="inativo"{% endif %}>
+            <td>{{ u.nome }}</td>
+            <td>{{ u.email }}</td>
+            <td class="data">{{ u.criado_em|data('%d/%m/%Y') }}</td>
+            <td>
+              {% if u.id == current_user.id %}
+                {{ PERFIS[u.perfil] }} (você)
+              {% else %}
+                <form method="post" class="em-linha">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="id" value="{{ u.id }}">
+                  <label class="oculto" for="perfil-{{ u.id }}">Perfil de {{ u.nome }}</label>
+                  <select id="perfil-{{ u.id }}" name="perfil">
+                    {% for codigo, rotulo in PERFIS.items() %}
+                      <option value="{{ codigo }}" {% if u.perfil == codigo %}selected{% endif %}>{{ rotulo }}</option>
+                    {% endfor %}
+                  </select>
+                  <label class="caixa"><input type="checkbox" name="ativo" value="1" {% if u.ativo %}checked{% endif %}> Ativo</label>
+                  <button type="submit" class="botao botao-secundario botao-pequeno">Salvar</button>
+                </form>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

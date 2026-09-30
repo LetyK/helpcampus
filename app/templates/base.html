@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}{% endblock %} | HelpCampus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilo.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='icone.svg') }}" type="image/svg+xml">
+</head>
+<body>
+  <a class="pular" href="#conteudo">Ir para o conteúdo</a>
+
+  <header class="topo">
+    <div class="topo-interno">
+      <a class="marca" href="{{ url_for('chamados.inicio') }}">HelpCampus</a>
+      {% if current_user.is_authenticated %}
+        {% set ep = request.endpoint or '' %}
+        <nav class="menu" aria-label="Principal">
+          <a href="{{ url_for('chamados.lista') }}" {% if ep in ['chamados.lista','chamados.detalhe'] %}aria-current="page"{% endif %}>Chamados</a>
+          <a href="{{ url_for('chamados.novo') }}" {% if ep == 'chamados.novo' %}aria-current="page"{% endif %}>Abrir chamado</a>
+          {% if current_user.e_equipe %}
+            <a href="{{ url_for('admin.painel') }}" {% if ep == 'admin.painel' %}aria-current="page"{% endif %}>Painel</a>
+          {% endif %}
+          {% if current_user.e_admin %}
+            <a href="{{ url_for('admin.usuarios') }}" {% if ep == 'admin.usuarios' %}aria-current="page"{% endif %}>Usuários</a>
+            <a href="{{ url_for('admin.categorias') }}" {% if ep == 'admin.categorias' %}aria-current="page"{% endif %}>Categorias</a>
+          {% endif %}
+        </nav>
+        <form class="sair" method="post" action="{{ url_for('auth.sair') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <span class="quem">{{ current_user.nome.split()[0] }}</span>
+          <button type="submit" class="link-claro">Sair</button>
+        </form>
+      {% endif %}
+    </div>
+  </header>
+
+  <main id="conteudo" class="pagina {% block classe_pagina %}{% endblock %}">
+    {% with mensagens = get_flashed_messages(with_categories=true) %}
+      {% if mensagens %}
+        <div class="avisos" role="status">
+          {% for tipo, msg in mensagens %}<p class="aviso aviso-{{ tipo }}">{{ msg }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block conteudo %}{% endblock %}
+  </main>
+
+  <footer class="rodape">
+    HelpCampus. Projeto Integrador em Computação II, UNIVESP, 2026.
+  </footer>
+</body>
+</html>

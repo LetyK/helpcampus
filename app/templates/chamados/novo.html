@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block titulo %}Abrir chamado{% endblock %}
+{% block classe_pagina %}media{% endblock %}
+{% block conteudo %}
+  <h1>Abrir chamado</h1>
+  <form method="post" class="formulario">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <label for="titulo">Assunto</label>
+    <input id="titulo" name="titulo" maxlength="150" required value="{{ dados.titulo }}"
+           placeholder="Ex.: Nota da prova de Cálculo não aparece no sistema">
+
+    <label for="categoria_id">Categoria</label>
+    <select id="categoria_id" name="categoria_id" required>
+      <option value="">Selecione</option>
+      {% for cat in categorias %}
+        <option value="{{ cat.id }}" {% if dados.categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
+      {% endfor %}
+    </select>
+
+    <fieldset class="opcoes">
+      <legend>Prioridade</legend>
+      {% for codigo, rotulo in PRIORIDADES.items() %}
+        <label class="opcao"><input type="radio" name="prioridade" value="{{ codigo }}"
+          {% if dados.prioridade == codigo %}checked{% endif %}> {{ rotulo }}</label>
+      {% endfor %}
+      <small>Urgente: impede aula, prova ou prazo que vence em até 48 horas.</small>
+    </fieldset>
+
+    <label for="descricao">Descrição</label>
+    <textarea id="descricao" name="descricao" rows="7" required
+      placeholder="O que aconteceu, quando e o que você já tentou.">{{ dados.descricao }}</textarea>
+
+    <div class="acoes">
+      <button type="submit" class="botao">Abrir chamado</button>
+      <a href="{{ url_for('chamados.lista') }}">Cancelar</a>
+    </div>
+  </form>
+{% endblock %}

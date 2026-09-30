@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titulo %}Painel{% endblock %}
+{% block conteudo %}
+  <h1>Painel de atendimento</h1>
+
+  <div class="resumo">
+    <p><strong>{{ total }}</strong> chamados registrados</p>
+    <p><strong>{{ sem_responsavel }}</strong> em aberto sem responsável
+      {% if sem_responsavel %}(<a href="{{ url_for('chamados.lista', ordem='prioridade') }}">ver fila</a>){% endif %}</p>
+    <p><strong>{% if media_horas is none %}-{% elif media_horas < 48 %}{{ ('%.1f'|format(media_horas)).replace('.', ',') }} h{% else %}{{ ('%.1f'|format(media_horas / 24)).replace('.', ',') }} dias{% endif %}</strong>
+      tempo médio até a resolução</p>
+  </div>
+
+  <div class="grade-painel">
+    <section>
+      <h2>Por situação</h2>
+      <table class="tabela compacta">
+        {% for codigo, rotulo, n in por_status %}
+          <tr><th scope="row"><a href="{{ url_for('chamados.lista', status=codigo) }}">{{ rotulo }}</a></th>
+              <td class="num">{{ n }}</td>
+              <td class="barra-celula"><span class="barra" style="width: {{ (n / total * 100) if total else 0 }}%"></span></td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section>
+      <h2>Em aberto, por prioridade</h2>
+      <table class="tabela compacta">
+        {% for codigo, rotulo, n in por_prioridade %}
+          <tr class="p-{{ codigo }}"><th scope="row" class="prioridade"><a href="{{ url_for('chamados.lista', prioridade=codigo) }}">{{ rotulo }}</a></th>
+              <td class="num">{{ n }}</td></tr>
+        {% endfor %}
+      </table>
+    </section>
+
+    <section>
+      <h2>Por categoria</h2>
+      {% if por_categoria %}
+        <table class="tabela compacta">
+          {% for nome, n in por_categoria %}
+            <tr><th scope="row">{{ nome }}</th><td class="num">{{ n }}</td></tr>
+          {% endfor %}
+        </table>
+      {% else %}
+        <p class="apoio">Sem chamados ainda.</p>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

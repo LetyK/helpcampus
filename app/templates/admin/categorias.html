@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block titulo %}Categorias{% endblock %}
+{% block classe_pagina %}media{% endblock %}
+{% block conteudo %}
+  <h1>Categorias</h1>
+  <form method="post" class="em-linha nova-categoria">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="acao" value="criar">
+    <label for="nome">Nova categoria</label>
+    <input id="nome" name="nome" required minlength="3" maxlength="80">
+    <button type="submit" class="botao">Adicionar</button>
+  </form>
+
+  <table class="tabela">
+    <thead><tr><th scope="col">Nome</th><th scope="col">Chamados</th><th scope="col">Disponível na abertura</th></tr></thead>
+    <tbody>
+      {% for cat in categorias %}
+        <tr{% if not cat.ativa %} class="inativo"{% endif %}>
+          <td>{{ cat.nome }}</td>
+          <td class="num">{{ contagem.get(cat.id, 0) }}</td>
+          <td>
+            <form method="post" class="em-linha">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="hidden" name="acao" value="alternar">
+              <input type="hidden" name="id" value="{{ cat.id }}">
+              {{ 'Sim' if cat.ativa else 'Não' }}
+              <button type="submit" class="link">{{ 'Desativar' if cat.ativa else 'Reativar' }}</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

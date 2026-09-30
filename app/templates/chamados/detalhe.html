@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block titulo %}Chamado #{{ c.id }}{% endblock %}
+{% block conteudo %}
+  <p class="voltar"><a href="{{ url_for('chamados.lista') }}">Voltar para a lista</a></p>
+
+  <div class="detalhe">
+    <article class="principal">
+      <h1><span class="num-titulo">#{{ c.id }}</span> {{ c.titulo }}</h1>
+      <p class="linha-meta">
+        Aberto por <strong>{{ c.solicitante.nome }}</strong> em {{ c.criado_em|data }}
+      </p>
+      <div class="descricao">{{ c.descricao }}</div>
+
+      <h2 id="historico">Histórico</h2>
+      <ol class="historico">
+        {% for h in c.historico %}
+          <li class="h-{{ h.tipo }}{% if h.autor.e_equipe %} h-equipe{% endif %}">
+            <div class="h-cabeca">
+              <strong>{{ h.autor.nome }}</strong>
+              {% if h.autor.e_equipe %}<span class="etiqueta">{{ PERFIS[h.autor.perfil] }}</span>{% endif %}
+              <time>{{ h.criado_em|data }}</time>
+            </div>
+            <div class="h-texto">{{ h.texto }}</div>
+          </li>
+        {% endfor %}
+      </ol>
+
+      {% if c.status != 'arquivado' %}
+        <form method="post" action="{{ url_for('chamados.comentar', chamado_id=c.id) }}" class="formulario">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <label for="texto">{% if current_user.e_equipe %}Responder ao solicitante{% else %}Enviar mensagem à equipe{% endif %}</label>
+          <textarea id="texto" name="texto" rows="4" required></textarea>
+          <div class="acoes"><button type="submit" class="botao">Enviar mensagem</button></div>
+        </form>
+      {% else %}
+        <p class="apoio">Este chamado está arquivado. Para um problema novo, <a href="{{ url_for('chamados.novo') }}">abra outro chamado</a>.</p>
+      {% endif %}
+    </article>
+
+    <aside class="lateral" aria-label="Dados do chamado">
+      <dl class="dados">
+        <dt>Situação</dt><dd><span class="situacao s-{{ c.status }}">{{ STATUS[c.status] }}</span></dd>
+        <dt>Prioridade</dt><dd class="p-{{ c.prioridade }} prioridade">{{ PRIORIDADES[c.prioridade] }}</dd>
+        <dt>Categoria</dt><dd>{{ c.categoria.nome }}</dd>
+        <dt>Responsável</dt><dd>{{ c.responsavel.nome if c.responsavel else 'Ainda não atribuído' }}</dd>
+        <dt>Última atualização</dt><dd>{{ c.atualizado_em|data }}</dd>
+        {% if c.resolvido_em %}<dt>Resolvido em</dt><dd>{{ c.resolvido_em|data }}</dd>{% endif %}
+      </dl>
+
+      {% if current_user.e_equipe %}
+        <form method="post" action="{{ url_for('chamados.atualizar', chamado_id=c.id) }}" class="formulario gerir">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <h2>Atendimento</h2>
+          <label for="g-status">Situação</label>
+          <select id="g-status" name="status">
+            {% for codigo, rotulo in STATUS.items() %}
+              <option value="{{ codigo }}" {% if c.status == codigo %}selected{% endif %}>{{ rotulo }}</option>
+            {% endfor %}
+          </select>
+          <label for="g-prioridade">Prioridade</label>
+          <select id="g-prioridade" name="prioridade">
+            {% for codigo, rotulo in PRIORIDADES.items() %}
+              <option value="{{ codigo }}" {% if c.prioridade == codigo %}selected{% endif %}>{{ rotulo }}</option>
+            {% endfor %}
+          </select>
+          <label for="g-resp">Responsável</label>
+          <select id="g-resp" name="responsavel_id">
+            <option value="">Ninguém</option>
+            {% for u in equipe %}
+              <option value="{{ u.id }}" {% if c.responsavel_id == u.id %}selected{% endif %}>{{ u.nome }}{% if u.id == current_user.id %} (você){% endif %}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="botao botao-secundario">Salvar alterações</button>
+        </form>
+      {% endif %}
+    </aside>
+  </div>
+{% endblock %}

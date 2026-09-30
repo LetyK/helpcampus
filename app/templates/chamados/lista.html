@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block titulo %}Chamados{% endblock %}
+{% block conteudo %}
+  <div class="cabecalho">
+    <h1>{% if current_user.e_equipe %}Chamados{% else %}Meus chamados{% endif %}</h1>
+    <a class="botao" href="{{ url_for('chamados.novo') }}">Abrir chamado</a>
+  </div>
+
+  <form method="get" class="filtros" aria-label="Filtrar chamados">
+    <div class="campo campo-busca">
+      <label for="q">Buscar</label>
+      <input id="q" name="q" type="search" value="{{ f.q }}" placeholder="Assunto, texto ou número">
+    </div>
+    <div class="campo">
+      <label for="status">Situação</label>
+      <select id="status" name="status">
+        <option value="">Em aberto e resolvidos</option>
+        {% for codigo, rotulo in STATUS.items() %}
+          <option value="{{ codigo }}" {% if f.status == codigo %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+        <option value="todos" {% if f.status == 'todos' %}selected{% endif %}>Todos, inclusive arquivados</option>
+      </select>
+    </div>
+    <div class="campo">
+      <label for="categoria">Categoria</label>
+      <select id="categoria" name="categoria">
+        <option value="">Todas</option>
+        {% for cat in categorias %}
+          <option value="{{ cat.id }}" {% if f.categoria == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="prioridade">Prioridade</label>
+      <select id="prioridade" name="prioridade">
+        <option value="">Todas</option>
+        {% for codigo, rotulo in PRIORIDADES.items() %}
+          <option value="{{ codigo }}" {% if f.prioridade == codigo %}selected{% endif %}>{{ rotulo }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="campo">
+      <label for="ordem">Ordenar por</label>
+      <select id="ordem" name="ordem">
+        <option value="recentes" {% if f.ordem == 'recentes' %}selected{% endif %}>Mais recentes</option>
+        <option value="antigos" {% if f.ordem == 'antigos' %}selected{% endif %}>Mais antigos</option>
+        <option value="prioridade" {% if f.ordem == 'prioridade' %}selected{% endif %}>Prioridade</option>
+      </select>
+    </div>
+    {% if current_user.e_equipe %}
+      <label class="caixa"><input type="checkbox" name="meus" value="1" {% if f.meus %}checked{% endif %}> Só os meus</label>
+    {% endif %}
+    <div class="campo-acoes">
+      <button type="submit" class="botao botao-secundario">Filtrar</button>
+      <a href="{{ url_for('chamados.lista') }}">Limpar</a>
+    </div>
+  </form>
+
+  {% if pagina.items %}
+    <p class="contagem">{{ pagina.total }} chamado{{ 's' if pagina.total != 1 }}</p>
+    <div class="rolagem">
+      <table class="tabela">
+        <thead>
+          <tr>
+            <th scope="col">Nº</th>
+            <th scope="col">Assunto</th>
+            <th scope="col">Categoria</th>
+            <th scope="col">Prioridade</th>
+            <th scope="col">Situação</th>
+            {% if current_user.e_equipe %}<th scope="col">Solicitante</th><th scope="col">Responsável</th>{% endif %}
+            <th scope="col">Aberto em</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in pagina.items %}
+            <tr class="p-{{ c.prioridade }}">
+              <td class="num">{{ c.id }}</td>
+              <td><a href="{{ url_for('chamados.detalhe', chamado_id=c.id) }}">{{ c.titulo }}</a></td>
+              <td>{{ c.categoria.nome }}</td>
+              <td class="prioridade">{{ PRIORIDADES[c.prioridade] }}</td>
+              <td><span class="situacao s-{{ c.status }}">{{ STATUS[c.status] }}</span></td>
+              {% if current_user.e_equipe %}
+                <td>{{ c.solicitante.nome }}</td>
+                <td>{{ c.responsavel.nome if c.responsavel else '-' }}</td>
+              {% endif %}
+              <td class="data">{{ c.criado_em|data('%d/%m/%Y') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if pagina.pages > 1 %}
+      {% set args = request.args.to_dict() %}{% set _ = args.pop('page', None) %}
+      <nav class="paginas" aria-label="Páginas">
+        {% if pagina.has_prev %}<a href="{{ url_for('chamados.lista', page=pagina.prev_num, **args) }}">Anterior</a>{% endif %}
+        <span>Página {{ pagina.page }} de {{ pagina.pages }}</span>
+        {% if pagina.has_next %}<a href="{{ url_for('chamados.lista', page=pagina.next_num, **args) }}">Próxima</a>{% endif %}
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="vazio">
+      {% if request.args %}
+        <p>Nenhum chamado com esses filtros. <a href="{{ url_for('chamados.lista') }}">Ver todos</a></p>
+      {% elif current_user.e_equipe %}
+        <p>A fila está vazia. Os chamados abertos pelos alunos e colaboradores aparecem aqui.</p>
+      {% else %}
+        <p>Você ainda não abriu nenhum chamado. Precisa de algo da secretaria, do TI ou da coordenação?</p>
+        <p><a class="botao" href="{{ url_for('chamados.novo') }}">Abrir o primeiro chamado</a></p>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}
